@@ -1,10 +1,10 @@
 /* eslint-disable no-restricted-globals */
 /* eslint-disable react/jsx-props-no-spreading */
-import { useState } from 'react'
-import { useSelector } from 'react-redux'
-import { useHistory } from 'react-router-dom'
-import svg from '../assets/svg'
-import { getFiltersState } from '../store/selectors/dashboard'
+import { useState } from 'react';
+import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import svg from '../assets/svg';
+import { getFiltersState } from '../store/selectors/dashboard';
 import {
   Filter,
   FiltersContainer,
@@ -12,49 +12,41 @@ import {
   FiltersWrapper,
   Option,
   OptionsWrapper,
-} from '../styled/components/Filters'
-import useQuery from '../utils/hooks/useQuery'
+} from '../styled/components/Filters';
+import useQuery from '../utils/hooks/useQuery';
 
 function Filters() {
-  const [showFilter, setShowFilter] = useState(false)
+  const [showFilter, setShowFilter] = useState(false);
 
-  const { currentFilter, allFilters } = useSelector(getFiltersState)
-  const history = useHistory()
-  const query = useQuery()
+  const { currentFilter, allFilters } = useSelector(getFiltersState);
+  const navigate = useNavigate();
+  const query = useQuery();
 
   function toggleFilter() {
-    setShowFilter(!showFilter)
+    setShowFilter(!showFilter);
   }
 
   function handleOnChange(filter) {
     if (filter !== currentFilter) {
-      const newFilter = query.get('filter')
-      const currentPage = query.get('page')
+      const newFilter = query.get('filter');
+      const currentPage = query.get('page');
 
-      let searchString = location.search
+      let searchParams = new URLSearchParams(location.search);
 
       if (currentPage) {
-        searchString = searchString.replace(/[&]?page=[0-9]*[&]?/g, ``)
+        searchParams.delete('page');
       }
 
-      if (!newFilter) {
-        history.push(
-          searchString
-            ? `${searchString}&filter=${filter}`
-            : `/?filter=${filter}`
-        )
-      } else {
-        const n = searchString.replace(/filter=[a-z]*/g, `filter=${filter}`)
-        history.push(`/${n}`)
-      }
+      searchParams.set('filter', filter);
 
-      toggleFilter()
+      navigate(`?${searchParams.toString()}`);
+      toggleFilter();
     }
   }
 
   const currentFilterLabel = allFilters.find(
     (filter) => filter.value === currentFilter
-  )?.label
+  )?.label;
 
   return (
     <FiltersContainer>
@@ -77,7 +69,7 @@ function Filters() {
         </OptionsWrapper>
       )}
     </FiltersContainer>
-  )
+  );
 }
 
-export default Filters
+export default Filters;

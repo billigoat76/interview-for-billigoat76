@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types'
 import { useState } from 'react'
-import LaunchStatus from '../../components/LaunchStatus'
+import LaunchStatus from '../../components/LaunchStatus.jsx'
 import { LaunchData, TableRow } from '../../styled/modules/Dashboard'
 import { getDate, getLaunchStatus } from '../../utils/helpers'
 import LaunchDetails from '../LaunchDetails'

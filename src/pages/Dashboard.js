@@ -1,7 +1,7 @@
 /* eslint-disable no-restricted-globals */
 import { useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux'
-import { useHistory } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import Dashboard from '../modules/Dashboard'
 import { changeDateFilter, changeFilter } from '../store/actions/filters'
 import {
@@ -14,41 +14,39 @@ function DashboardPage() {
   const [pageLocation, setLocation] = useState(null)
   const dispatch = useDispatch()
   const query = useQuery()
-  const history = useHistory()
-
-  function fetchInitialLaunches() {
-    const queryValues = [
-      'filter',
-      'dateFilter',
-      'start',
-      'end',
-      'page',
-    ].map((v) => query.get(v))
-
-    if (queryValues.every((v) => !v)) {
-      dispatch(changeFilter('all'))
-      dispatch(changeDateFilter('all'))
-      dispatch(
-        getLaunchesRequested({
-          initial: true,
-          dateFilter: 'all',
-          filter: 'all',
-          page: 1,
-        })
-      )
-    }
-  }
+  const navigate = useNavigate()
 
   useEffect(() => {
-    fetchInitialLaunches()
-    history.listen((location) => {
-      if (!location.search) {
-        fetchInitialLaunches()
-      }
+    function fetchInitialLaunches() {
+      const queryValues = [
+        'filter',
+        'dateFilter',
+        'start',
+        'end',
+        'page',
+      ].map((v) => query.get(v))
 
-      setLocation(location)
-    })
-  }, [])
+      if (queryValues.every((v) => !v)) {
+        dispatch(changeFilter('all'))
+        dispatch(changeDateFilter('all'))
+        dispatch(
+          getLaunchesRequested({
+            initial: true,
+            dateFilter: 'all',
+            filter: 'all',
+            page: 1,
+          })
+        )
+      }
+    }
+
+    fetchInitialLaunches()
+    if (!location.search) {
+      fetchInitialLaunches()
+    }
+
+    setLocation(location)
+  }, [dispatch, query, location])
 
   useEffect(() => {
     const filter = query.get('filter')
@@ -79,7 +77,7 @@ function DashboardPage() {
         getLaunchesRequested({ filter, dateFilter, page: Number(page) || 1 })
       )
     }
-  }, [query, pageLocation])
+  }, [query, pageLocation, dispatch])
 
   return <Dashboard />
 }

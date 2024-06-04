@@ -1,17 +1,15 @@
-import { useEffect, useRef, useState } from 'react'
-import { useSelector } from 'react-redux'
-import moment from 'moment'
-import { useNavigate } from 'react-router-dom'
-
-import DateRangePicker from 'react-daterange-picker'
-
-import 'react-daterange-picker/dist/css/react-calendar.css'
-
-import svg from '../assets/svg'
+/* eslint-disable no-restricted-globals */
+/* eslint-disable react/jsx-props-no-spreading */
+import { useEffect, useRef, useState } from 'react';
+import { useSelector } from 'react-redux';
+import moment from 'moment';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { DateRangePicker } from 'rsuite';
+import svg from '../assets/svg';
 import {
   getDateFilters,
   isLaunchesByCustomDates,
-} from '../store/selectors/dashboard'
+} from '../store/selectors/dashboard';
 import {
   CurrentFilter,
   CurrentFilterWrapper,
@@ -20,125 +18,99 @@ import {
   FilterByDateContainer,
   FilterByDateIcon,
   FilterByDateOverlay,
-} from '../styled/components/FilterByDate'
-import useQuery from '../utils/hooks/useQuery'
+} from '../styled/components/FilterByDate';
+import useQuery from '../utils/hooks/useQuery';
 
 function FilterByDate() {
   const { currentDateFilter, dateFilters, currentFilterData } = useSelector(
     getDateFilters
-  )
-  const isLauchesByCustomDates = useSelector(isLaunchesByCustomDates)
+  );
+  const isLauchesByCustomDates = useSelector(isLaunchesByCustomDates);
 
-  const wrapperRef = useRef(null)
+  const wrapperRef = useRef(null);
 
-  const [showFilters, setShowFilters] = useState(false)
-  const [customDates, setCustomDates] = useState(null)
+  const [showFilters, setShowFilters] = useState(false);
+  const [customDates, setCustomDates] = useState(null);
 
-  const history = useNavigate()
-  const query = useQuery()
+  const navigate = useNavigate();
+  const location = useLocation();
+  const query = useQuery();
 
   useEffect(() => {
     if (isLauchesByCustomDates) {
-      const start = query.get('start')
-      const end = query.get('end')
+      const start = query.get('start');
+      const end = query.get('end');
       setCustomDates(
         moment.range(moment(new Date(start)), moment(new Date(end)))
-      )
+      );
     } else {
       const initialDates = !currentFilterData.dates.start
         ? null
         : moment.range(
             moment(currentFilterData.dates.start),
             moment(currentFilterData.dates.end)
-          )
-      setCustomDates(initialDates)
+          );
+      setCustomDates(initialDates);
     }
-  }, [isLauchesByCustomDates, currentFilterData])
+  }, [isLauchesByCustomDates, currentFilterData]);
 
   function toggleFilter() {
-    setShowFilters(!showFilters)
+    setShowFilters(!showFilters);
   }
 
   function onFilterClick(filter) {
-    const dateFilterQuery = query.get('dateFilter')
-    const startFilter = query.get('start')
-    const endFilter = query.get('end')
-    const currentPage = query.get('page')
+    const dateFilterQuery = query.get('dateFilter');
+    const startFilter = query.get('start');
+    const endFilter = query.get('end');
+    const currentPage = query.get('page');
 
-    let searchString = location.search
+    let searchParams = new URLSearchParams(location.search);
 
     if (startFilter && endFilter) {
-      searchString = searchString.replace(/[&]?start=[A-Z0-9-:]*[&]?/g, ``)
-
-      searchString = searchString.replace(/[&]?end=[A-Z0-9-:]*[&]?/g, ``)
+      searchParams.delete('start');
+      searchParams.delete('end');
     }
 
     if (currentPage) {
-      searchString = searchString.replace(/[&]?page=[0-9]*[&]?/g, ``)
+      searchParams.delete('page');
     }
 
-    if (!dateFilterQuery) {
-      history.push(
-        searchString
-          ? `${searchString}&dateFilter=${filter}`
-          : `/?dateFilter=${filter}`
-      )
-    } else {
-      const n = searchString.replace(
-        /dateFilter=[a-z0-9_]*/g,
-        `dateFilter=${filter}`
-      )
-      history.push(`/${n}`)
-    }
+    searchParams.set('dateFilter', filter);
 
-    toggleFilter()
+    navigate(`?${searchParams.toString()}`);
+    toggleFilter();
   }
 
   function handleDateSelect(dates) {
-    setCustomDates(dates)
-    let startDate = dates.start.toISOString()
-    startDate = startDate.slice(0, startDate.indexOf('T'))
+    setCustomDates(dates);
+    let startDate = dates.start.toISOString().split('T')[0];
+    let endDate = dates.end.toISOString().split('T')[0];
 
-    let endDate = dates.end.toISOString()
-    endDate = endDate.slice(0, endDate.indexOf('T'))
+    const startFilter = query.get('start');
+    const endFilter = query.get('end');
+    const dateFilterQuery = query.get('dateFilter');
+    const currentPage = query.get('page');
 
-    const startFilter = query.get('start')
-    const endFilter = query.get('end')
-    const dateFilterQuery = query.get('dateFilter')
-    const currentPage = query.get('page')
-
-    let searchString = location.search
+    let searchParams = new URLSearchParams(location.search);
 
     if (currentPage) {
-      searchString = searchString.replace(/[&]?page=[0-9]*[&]?/g, ``)
+      searchParams.delete('page');
     }
 
     if (dateFilterQuery) {
-      searchString = searchString.replace(/[&]?dateFilter=[a-z0-9_]*[&]?/g, ``)
+      searchParams.delete('dateFilter');
     }
 
-    if (!startFilter && !endFilter) {
-      history.push(
-        searchString
-          ? `${searchString}&start=${startDate}&end=${endDate}`
-          : `/?start=${startDate}&end=${endDate}`
-      )
-    } else {
-      let dateReplaced = searchString.replace(
-        /start=[A-Z0-9-:]*/g,
-        `start=${startDate}`
-      )
-      dateReplaced = dateReplaced.replace(/end=[A-Z0-9-:]*/g, `end=${endDate}`)
+    searchParams.set('start', startDate);
+    searchParams.set('end', endDate);
 
-      history.push(`/${dateReplaced}`)
-    }
-    toggleFilter()
+    navigate(`?${searchParams.toString()}`);
+    toggleFilter();
   }
 
   function handleDismiss(event) {
-    if (event.target !== wrapperRef.current) return
-
-    toggleFilter()
+    if (event.target !== wrapperRef.current) return;
+    toggleFilter();
   }
 
   return (
@@ -178,7 +150,7 @@ function FilterByDate() {
         </FilterByDateOverlay>
       )}
     </>
-  )
+  );
 }
 
-export default FilterByDate
+export default FilterByDate;

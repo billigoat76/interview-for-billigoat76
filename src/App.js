@@ -1,9 +1,9 @@
-import { Provider } from 'react-redux'
-import { BrowserRouter as Router, Route } from 'react-router-dom'
-import Header from './components/Header'
-import DashboardPage from './pages/Dashboard'
-import store from './store'
-import GlobalStyles from './styled/globalStyles'
+import { Provider } from 'react-redux';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Header from './components/Header';
+import DashboardPage from './pages/Dashboard';
+import store from './store';
+import GlobalStyles from './styled/globalStyles';
 
 function App() {
   return (
@@ -11,10 +11,12 @@ function App() {
       <GlobalStyles />
       <Header />
       <Router>
-        <Route path="/" exact component={DashboardPage} />
+        <Routes>
+          <Route path="/" element={<DashboardPage />} />
+        </Routes>
       </Router>
     </Provider>
-  )
+  );
 }
 
-export default App
+export default App;

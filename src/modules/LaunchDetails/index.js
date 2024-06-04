@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types'
 import { useRef } from 'react'
 import svg from '../../assets/svg'
-import LaunchStatus from '../../components/LaunchStatus'
+import LaunchStatus from '../../components/LaunchStatus.jsx'
 import {
   DetailsModal,
   DetailsOverlay,
@@ -19,7 +19,7 @@ import {
   InfoLinkWrapper,
   LaunchDescriptionWrapper,
   WikipediaLink,
-} from '../../styled/modules/LauchDetails'
+} from '../../styled/modules/LaunchDetails'
 import { getDate, getLaunchStatus } from '../../utils/helpers'
 import DetailStrip from './DetailStrip'
 

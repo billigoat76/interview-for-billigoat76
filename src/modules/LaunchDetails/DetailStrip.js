@@ -4,7 +4,7 @@ import {
   DetailTitle,
   DetailValue,
   DetailStripWrapper,
-} from '../../styled/modules/LauchDetails'
+} from '../../styled/modules/LaunchDetails'
 
 function DetailStrip(props) {
   const { title, value, noBorder } = props
