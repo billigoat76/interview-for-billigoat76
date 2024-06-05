@@ -1,15 +1,14 @@
-/* eslint-disable no-restricted-globals */
-/* eslint-disable react/jsx-props-no-spreading */
-import { useEffect, useRef, useState } from 'react';
-import { useSelector } from 'react-redux';
-import moment from 'moment';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { DateRangePicker } from 'rsuite';
-import svg from '../assets/svg';
+import { useEffect, useRef, useState } from 'react'
+import { useSelector } from 'react-redux'
+import moment from 'moment'
+import { useNavigate, useLocation } from 'react-router-dom'
+import { DateRange } from 'react-date-range'
+
+import svg from '../assets/svg'
 import {
   getDateFilters,
   isLaunchesByCustomDates,
-} from '../store/selectors/dashboard';
+} from '../store/selectors/dashboard'
 import {
   CurrentFilter,
   CurrentFilterWrapper,
@@ -18,99 +17,146 @@ import {
   FilterByDateContainer,
   FilterByDateIcon,
   FilterByDateOverlay,
-} from '../styled/components/FilterByDate';
-import useQuery from '../utils/hooks/useQuery';
+} from '../styled/components/FilterByDate'
+import useQuery from '../utils/hooks/useQuery'
+
+import 'react-date-range/dist/styles.css'; // main css file
+import 'react-date-range/dist/theme/default.css'; // theme css file
 
 function FilterByDate() {
   const { currentDateFilter, dateFilters, currentFilterData } = useSelector(
     getDateFilters
-  );
-  const isLauchesByCustomDates = useSelector(isLaunchesByCustomDates);
+  )
+  const isLauchesByCustomDates = useSelector(isLaunchesByCustomDates)
 
-  const wrapperRef = useRef(null);
+  const wrapperRef = useRef(null)
 
-  const [showFilters, setShowFilters] = useState(false);
-  const [customDates, setCustomDates] = useState(null);
+  const [showFilters, setShowFilters] = useState(false)
+  const [customDates, setCustomDates] = useState([
+    {
+      startDate: new Date(),
+      endDate: new Date(),
+      key: 'selection'
+    }
+  ])
 
-  const navigate = useNavigate();
-  const location = useLocation();
-  const query = useQuery();
+  const navigate = useNavigate()
+  const query = useQuery()
+  const location = useLocation()
 
   useEffect(() => {
     if (isLauchesByCustomDates) {
-      const start = query.get('start');
-      const end = query.get('end');
-      setCustomDates(
-        moment.range(moment(new Date(start)), moment(new Date(end)))
-      );
+      const start = query.get('start')
+      const end = query.get('end')
+      setCustomDates([
+        {
+          startDate: new Date(start),
+          endDate: new Date(end),
+          key: 'selection'
+        }
+      ])
     } else {
       const initialDates = !currentFilterData.dates.start
-        ? null
-        : moment.range(
-            moment(currentFilterData.dates.start),
-            moment(currentFilterData.dates.end)
-          );
-      setCustomDates(initialDates);
+        ? [{
+            startDate: new Date(),
+            endDate: new Date(),
+            key: 'selection'
+          }]
+        : [{
+            startDate: new Date(currentFilterData.dates.start),
+            endDate: new Date(currentFilterData.dates.end),
+            key: 'selection'
+          }]
+      setCustomDates(initialDates)
     }
-  }, [isLauchesByCustomDates, currentFilterData]);
+  }, [isLauchesByCustomDates, currentFilterData])
 
   function toggleFilter() {
-    setShowFilters(!showFilters);
+    setShowFilters(!showFilters)
   }
 
   function onFilterClick(filter) {
-    const dateFilterQuery = query.get('dateFilter');
-    const startFilter = query.get('start');
-    const endFilter = query.get('end');
-    const currentPage = query.get('page');
+    const dateFilterQuery = query.get('dateFilter')
+    const startFilter = query.get('start')
+    const endFilter = query.get('end')
+    const currentPage = query.get('page')
 
-    let searchParams = new URLSearchParams(location.search);
+    let searchString = location.search
 
     if (startFilter && endFilter) {
-      searchParams.delete('start');
-      searchParams.delete('end');
+      searchString = searchString.replace(/[&]?start=[A-Z0-9-:]*[&]?/g, ``)
+
+      searchString = searchString.replace(/[&]?end=[A-Z0-9-:]*[&]?/g, ``)
     }
 
     if (currentPage) {
-      searchParams.delete('page');
+      searchString = searchString.replace(/[&]?page=[0-9]*[&]?/g, ``)
     }
 
-    searchParams.set('dateFilter', filter);
+    if (!dateFilterQuery) {
+      navigate(
+        searchString
+          ? `${searchString}&dateFilter=${filter}`
+          : `/?dateFilter=${filter}`
+      )
+    } else {
+      const n = searchString.replace(
+        /dateFilter=[a-z0-9_]*/g,
+        `dateFilter=${filter}`
+      )
+      navigate(`/${n}`)
+    }
 
-    navigate(`?${searchParams.toString()}`);
-    toggleFilter();
+    toggleFilter()
   }
 
-  function handleDateSelect(dates) {
-    setCustomDates(dates);
-    let startDate = dates.start.toISOString().split('T')[0];
-    let endDate = dates.end.toISOString().split('T')[0];
+  function handleDateSelect(ranges) {
+    const { selection } = ranges;
+    setCustomDates([selection]);
 
-    const startFilter = query.get('start');
-    const endFilter = query.get('end');
-    const dateFilterQuery = query.get('dateFilter');
-    const currentPage = query.get('page');
+    let startDate = selection.startDate.toISOString()
+    startDate = startDate.slice(0, startDate.indexOf('T'))
 
-    let searchParams = new URLSearchParams(location.search);
+    let endDate = selection.endDate.toISOString()
+    endDate = endDate.slice(0, endDate.indexOf('T'))
+
+    const startFilter = query.get('start')
+    const endFilter = query.get('end')
+    const dateFilterQuery = query.get('dateFilter')
+    const currentPage = query.get('page')
+
+    let searchString = location.search
 
     if (currentPage) {
-      searchParams.delete('page');
+      searchString = searchString.replace(/[&]?page=[0-9]*[&]?/g, ``)
     }
 
     if (dateFilterQuery) {
-      searchParams.delete('dateFilter');
+      searchString = searchString.replace(/[&]?dateFilter=[a-z0-9_]*[&]?/g, ``)
     }
 
-    searchParams.set('start', startDate);
-    searchParams.set('end', endDate);
+    if (!startFilter && !endFilter) {
+      navigate(
+        searchString
+          ? `${searchString}&start=${startDate}&end=${endDate}`
+          : `/?start=${startDate}&end=${endDate}`
+      )
+    } else {
+      let dateReplaced = searchString.replace(
+        /start=[A-Z0-9-:]*/g,
+        `start=${startDate}`
+      )
+      dateReplaced = dateReplaced.replace(/end=[A-Z0-9-:]*/g, `end=${endDate}`)
 
-    navigate(`?${searchParams.toString()}`);
-    toggleFilter();
+      navigate(`/${dateReplaced}`)
+    }
+    toggleFilter()
   }
 
   function handleDismiss(event) {
-    if (event.target !== wrapperRef.current) return;
-    toggleFilter();
+    if (event.target !== wrapperRef.current) return
+
+    toggleFilter()
   }
 
   return (
@@ -140,17 +186,15 @@ function FilterByDate() {
                 </DateFiltersByLabel>
               ))}
             </DateFiltersByLabelContainer>
-            <DateRangePicker
-              numberOfCalendars={2}
-              selectionType="range"
-              onSelect={handleDateSelect}
-              value={customDates}
+            <DateRange
+              ranges={customDates}
+              onChange={handleDateSelect}
             />
           </FilterByDateContainer>
         </FilterByDateOverlay>
       )}
     </>
-  );
+  )
 }
 
-export default FilterByDate;
+export default FilterByDate
